@@ -1,0 +1,28 @@
+#!/bin/bash
+
+runlen="$1"
+shift
+
+psql <<END
+drop table if exists test;
+create table test as select generate_series(1,1e8) as id, 1 as foo;
+alter table test add primary key (id);
+analyze test;
+END
+
+for batch in 5e7 4e7 3e7 2e7 1e7 5e6 1e6 1e5 1e4; do
+    ./q-runner "$runlen" "select sum(foo) from test where id < $batch" >results.$batch &
+done
+./q-runner "$runlen" "update test set foo=foo+1 where id=1" >results.update &
+
+sleep 60
+
+psql -c 'begin ; lock table test in access share mode ; select pg_sleep(30)' &
+sleep 1
+
+time "$@"
+
+wait
+
+./mergedats results.* >run.$$.tsv
+rm results.*

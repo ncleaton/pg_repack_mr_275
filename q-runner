@@ -1,0 +1,43 @@
+#!/usr/bin/python3
+
+from collections import defaultdict
+import psycopg2
+import random
+import sys
+import time
+
+
+run_for_seconds = int(sys.argv[1])
+query = sys.argv[2]
+
+
+conn = psycopg2.connect('')
+conn.autocommit = True
+cur = conn.cursor()
+
+cur.execute('set max_parallel_workers_per_gather to 0')
+
+total_duration = defaultdict(float)
+query_count = defaultdict(int)
+
+run_start = time.time()
+stop_at = run_start + run_for_seconds
+
+
+q_start = 0
+while q_start < stop_at:
+    q_start = time.time()
+    cur.execute(query)
+    took = time.time() - q_start
+    time.sleep(random.uniform(0, 2*took)) # 50% duty cycle on average
+
+    second = int(q_start)
+    total_duration[second] += took
+    query_count[second] += 1
+
+
+for second in range(int(run_start), int(stop_at)):
+    count = query_count[second]
+    if count > 0:
+        mean_duration = total_duration[second] / count
+        print(second, mean_duration, count)

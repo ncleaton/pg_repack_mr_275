@@ -1,0 +1,33 @@
+#!/usr/bin/python3
+
+
+import sys
+
+
+have_seconds = set()
+by_tag = dict()
+
+for filename in sys.argv[1:]:
+    tag = filename.split('.')[-1]
+    d = {}
+    with open(filename) as f:
+        for line in f:
+            second, duration, persec = line.strip().split()
+            second = int(second)
+            have_seconds.add(second)
+            d[second] = duration
+    by_tag[tag] = d
+
+all_seconds = list(have_seconds)
+all_seconds.sort()
+
+tags = sorted(by_tag.keys())
+
+headers = ['time'] + tags
+print("\t".join(headers))
+
+for second in all_seconds:
+    line = [str(second - all_seconds[0])]
+    for t in tags:
+        line.append(by_tag[t].get(second, '-'))
+    print("\t".join(line))

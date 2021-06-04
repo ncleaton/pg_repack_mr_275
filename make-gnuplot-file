@@ -1,0 +1,40 @@
+#!/bin/bash
+
+srcfile="$1"
+
+plot() {
+	colnum=$1
+	title=$2
+	if [[ $title = 'update' ]]; then
+		title='update 1 row'
+	else
+		title="sum $title rows"
+	fi
+
+	echo -n " '$srcfile' using 1:$colnum with lines title '$title' "
+}
+
+cat <<END
+set yrange [*:10]
+set term png
+set output "$srcfile.png"
+set datafile missing "-"
+set xlabel 'Time/seconds'
+set ylabel 'Mean query duration/seconds'
+set logscale y
+END
+
+echo -n plot
+            plot 2 1e4
+echo -n , ; plot 3 1e5
+echo -n , ; plot 4 1e6
+#echo -n , ; plot 5 1e7
+#echo -n , ; plot 6 2e7
+#echo -n , ; plot 7 3e7
+#echo -n , ; plot 8 4e7
+#echo -n , ; plot 9 5e6
+#echo -n , ; plot 10 5e7
+
+echo -n , ; plot 11 update 
+
+echo
